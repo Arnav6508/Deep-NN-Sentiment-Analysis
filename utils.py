@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
 
 def train_test_split(pos_tweets, neg_tweets):
     # Split positive set into validation and training
@@ -45,10 +46,6 @@ def pad_seq(tweet, vocab, max_len, unk_token = '[UNK]'):
     padded_seq = indexed_seq + [0]*(max_len-len(tweet))
     return padded_seq
 
-def relu(x): return np.maximum(x,0)
-
-def sigmoid(x): return 1/1+np.exp(-x)
-
 def create_model(vocab_size, embedding_dim, max_len):
     model = tf.keras.Sequential([
         tf.keras.layers.Embedding(vocab_size, embedding_dim, input_length = max_len),
@@ -68,4 +65,25 @@ def plot_metrics(history, metric):
     plt.xlabel("Epochs")
     plt.ylabel(metric.title())
     plt.legend([metric, f'val_{metric}'])
+    plt.show()
+
+def plot_embeddings(embeddings, vocab):
+    pca = PCA(n_components = 2)
+    embeddings_2D = pca.fit_transform(embeddings)
+
+    pos_words = ['best', 'good', 'nice', 'love', 'better', ':)']
+    neg_words = ['bad', 'hurt', 'sad', 'hate', 'worst', ':(']
+
+    pos_idx = [vocab[word] for word in pos_words]
+    neg_idx = [vocab[word] for word in neg_words]
+
+    plt.scatter(embeddings_2D[pos_idx][:,0], embeddings_2D[pos_idx][:,1], color = 'g')
+    for i, text in enumerate(pos_words):
+        plt.annotate(text, (embeddings_2D[pos_idx][i,0], embeddings_2D[pos_idx][i,1]))
+
+    plt.scatter(embeddings_2D[neg_idx][:,0], embeddings_2D[neg_idx][:,1], color = 'r')
+    for i, text in enumerate(neg_words):
+        plt.annotate(text, (embeddings_2D[neg_idx][i,0], embeddings_2D[neg_idx][i,1]))
+    
+    plt.title('Word embeddings in 2D')
     plt.show()
